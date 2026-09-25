@@ -1,0 +1,27 @@
+# Go build output 
+/idp-app
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test / coverage
+*.test
+*.out
+coverage.*
+
+# Go workspace files (local-only)
+go.work
+go.work.sum
+
+# --- Secrets / local env ---
+.env
+.env.*
+
+# Editors / OS 
+.vscode/
+.idea/
+*.swp
+.DS_Store
