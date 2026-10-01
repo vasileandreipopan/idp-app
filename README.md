@@ -13,7 +13,7 @@ The platform is split across two repositories:
 
 | Repo | Responsibility |
 |---|---|
-| **idp-app** (this repo) | The application, its container image, and the CI pipeline that builds, scans and publishes it |
+| **idp-app** (this repo) | The application, its container image and the CI pipeline that builds, scans and publishes it |
 | **idp-platform** *(coming soon)* | Infrastructure (Terraform) and Kubernetes manifests, reconciled into the cluster by ArgoCD |
 
 This repo knows nothing about Kubernetes. Keeping "what the app is" separate from
