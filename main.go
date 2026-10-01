@@ -4,12 +4,35 @@ package main
 // import the packages we need
 import (
 
+	// convert Go data into JSON
+	"encoding/json"
+
 	// for printing to the console
 	"log"
 
 	// for creating a web server
 	"net/http"
 )
+
+// package-level variable, every function in the file can use this
+// "dev" is the default value
+var version = "dev"
+
+// w is the response writer, which is used to send data back to the client
+// status is the HTTP status code to send back to the client
+// v is the data to send back to the client, which will be converted to JSON
+func writeJSON(w http.ResponseWriter, status int, v interface{}) {
+
+	// set the Content-Type header to application/json, so the client knows we're sending JSON data
+	w.Header().Set("Content-Type", "application/json")
+
+	// set the HTTP status code to send back to the client
+	w.WriteHeader(status)
+
+	// convert the data to JSON and send it back to the client
+	// _ is used to ignore the error returned by json.NewEncoder(w).Encode(v), because we don't need to handle it in this case
+	_ = json.NewEncoder(w).Encode(v)
+}
 
 // main is the entry point of the program. when the program is run, this will be the function that is called first
 func main() {
@@ -20,17 +43,15 @@ func main() {
 	// incoming HTTP requests and route them to the appropriate handler functions
 	mux := http.NewServeMux()
 
-	// define a handler function for the /health endpoint. when a GET request is made to /health,
-	// this function will be called
-	// w is the response writer, which we can use to send a response back to the client
-	// r is the incoming HTTP request, which contains information about the request
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		// Write works with raw bytes, so using []byte() to convert the string to bytes
-		w.Write([]byte("ok"))
+	mux.HandleFunc("GET /version", func(w http.ResponseWriter, r *http.Request) {
+		//
+		writeJSON(w, http.StatusOK, map[string]string{"version": version})
 	})
 
-	log.Println("listening on :8888")
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	})
 
-	// start the HTTP server on port 8080, using the mux as the handler for incoming requests
+	log.Printf("idp-app %s listening on :8888", version)
 	log.Fatal(http.ListenAndServe(":8888", mux))
 }
