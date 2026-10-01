@@ -4,7 +4,7 @@ package main
 // import the packages we need
 import (
 
-	// convert Go data into JSON
+	// convert Go data into JSON.
 	"encoding/json"
 
 	// for printing to the console
@@ -12,6 +12,12 @@ import (
 
 	// for creating a web server
 	"net/http"
+
+	// for getting environment variables
+	"os"
+
+	// for setting timeouts on the server
+	"time"
 )
 
 // package-level variable, every function in the file can use this
@@ -44,7 +50,6 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /version", func(w http.ResponseWriter, r *http.Request) {
-		//
 		writeJSON(w, http.StatusOK, map[string]string{"version": version})
 	})
 
@@ -52,6 +57,17 @@ func main() {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	log.Printf("idp-app %s listening on :8888", version)
-	log.Fatal(http.ListenAndServe(":8888", mux))
+	// get the port from the environment variable PORT, or use 8888 if it's not set
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8888"
+	}
+
+	// create a new HTTP server with the specified address, handler, and read timeout
+	// & because we want to create a pointer to the http.Server struct, so we can modify its fields later if needed
+	// ReadTimeout is the Slowloris protection, it will close the connection if the client takes too long to send the request
+	srv := &http.Server{Addr: ":" + port, Handler: mux, ReadTimeout: 5 * time.Second}
+
+	log.Printf("idp-app %s listening on :%s", version, port)
+	log.Fatal(srv.ListenAndServe())
 }
