@@ -55,7 +55,7 @@ jobs:
           exit-code: '1'
 
       - name: Start container
-        run: docker run -d --name idp-app -p 8888:8080 idp-app:ci
+        run: docker run -d --name idp-app -p 8888:8888 idp-app:ci
 
       - name: Smoke test
         run: |
