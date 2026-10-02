@@ -35,9 +35,12 @@ jobs:
         run: go vet ./...
 
   image:
-    name: Build and smoke-test image
+    name: Build, scan, test and publish image
     needs: check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -55,7 +58,7 @@ jobs:
           exit-code: '1'
 
       - name: Start container
-        run: docker run -d --name idp-app -p 8888:8888 idp-app:ci
+        run: docker run -d --name idp-app -p 8888:8080 idp-app:ci
 
       - name: Smoke test
         run: |
@@ -67,6 +70,21 @@ jobs:
           echo "$got"
           echo "$got" | grep -q "$GITHUB_SHA"
 
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Push image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY}:${GITHUB_SHA}"
+          docker tag idp-app:ci "$image"
+          docker push "$image"
+          echo "Pushed $image"
+
       - name: Show container logs
         if: always()
         run: docker logs idp-app
+
