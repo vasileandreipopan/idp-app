@@ -33,3 +33,31 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+  image:
+    name: Build and smoke-test image
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build --build-arg VERSION="$GITHUB_SHA" -t idp-app:ci .
+
+      - name: Start container
+        run: docker run -d --name idp-app -p 8080:8080 idp-app:ci
+
+      - name: Smoke test
+        run: |
+          curl --fail --silent --show-error \
+            --retry 10 --retry-delay 1 --retry-all-errors \
+            http://localhost:8080/health
+          echo
+          got=$(curl --fail --silent --show-error http://localhost:8080/version)
+          echo "$got"
+          echo "$got" | grep -q "$GITHUB_SHA"
+
+      - name: Show container logs
+        if: always()
+        run: docker logs idp-app
